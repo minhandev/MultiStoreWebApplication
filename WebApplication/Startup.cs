@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -25,8 +27,18 @@ namespace WebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<MultiStoreContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ConnectString")));
+            services.AddDbContext<MultiStoreContext>(op => op.UseSqlServer(Configuration.GetConnectionString("ConnectString")));
             services.AddMvc(op => op.EnableEndpointRouting = false);
+
+            services.AddAuthentication(op =>
+            {
+                op.DefaultScheme = "Schema_Customer";
+            }).AddCookie("Schema_Admin", op =>
+            {
+                op.LoginPath = "/admin/login";
+                op.LogoutPath = "/admin/login/logout";
+                op.AccessDeniedPath = "/admin/login/accessdenied";
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,6 +58,18 @@ namespace WebApplication
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.Use(async (context, next) =>
+            {
+                var Principal = new ClaimsPrincipal();
+                var resultA = await context.AuthenticateAsync("Schema_Admin");
+                if (resultA?.Principal != null)
+                {
+                    Principal.AddIdentities(resultA.Principal.Identities);
+                }
+                context.User = Principal;
+                await next();
+            });
 
             app.UseAuthorization();
 
