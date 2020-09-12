@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using WebApplication.Repositories.EFCore;
 
 namespace WebApplication.Models
 {
-    public partial class Category
+    public partial class Category : IEntity
     {
         public Category()
         {
