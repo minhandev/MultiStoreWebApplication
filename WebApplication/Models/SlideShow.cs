@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using WebApplication.Repositories.EFCore;
 
 namespace WebApplication.Models
 {
-    public partial class SlideShow
+    public partial class SlideShow : IEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }
